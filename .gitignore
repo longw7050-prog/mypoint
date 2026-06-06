@@ -6,3 +6,9 @@ package-lock.json
 *.local
 .DS_Store
 Thumbs.db
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
