@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Users, ChevronRight, Shield, Cloud, Tags, X, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, ChevronRight, Cloud, Tags, X, Trash2, Lock } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { PointCategory } from '../types';
 import AvatarPicker from '../components/AvatarPicker';
 import { useToastStore } from '../components/Toast';
 import { useConfirmStore } from '../components/ConfirmDialog';
+import PinModal from '../components/PinModal';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { categories, addCategory, deleteCategory } = useStore();
+  const { categories, addCategory, deleteCategory, parentPin } = useStore();
   const addToast = useToastStore(state => state.addToast);
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categoryType, setCategoryType] = useState<'earn' | 'spend'>('earn');
   const [newCategory, setNewCategory] = useState({ name: '', points: '', icon: '🌟' });
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinMode, setPinMode] = useState<'set' | 'change'>('set');
 
   const menuItems: { icon: typeof TrendingUp; label: string; desc: string; color: string; path: string; disabled?: boolean }[] = [
     {
@@ -42,11 +45,11 @@ export default function Profile() {
 
   const settingItems = [
     {
-      icon: Shield,
-      label: '权限管理',
-      desc: '即将上线',
+      icon: Lock,
+      label: parentPin ? '修改家长密码' : '设置家长密码',
+      desc: parentPin ? '已设置6位数字密码' : '防止孩子误操作积分',
       color: 'from-purple-400 to-violet-500',
-      disabled: true,
+      action: 'pin',
     },
     {
       icon: Cloud,
@@ -191,19 +194,32 @@ export default function Profile() {
             <h2 className="text-xs font-semibold text-gray-400">系统设置</h2>
           </div>
           {settingItems.map((item) => (
-            <div
+            <button
               key={item.label}
-              className="flex items-center px-4 py-3.5 opacity-50"
+              onClick={() => {
+                if (item.disabled) return;
+                if (item.action === 'pin') {
+                  setPinMode(parentPin ? 'change' : 'set');
+                  setShowPinModal(true);
+                }
+              }}
+              className={`w-full flex items-center px-4 py-3.5 transition-colors ${
+                item.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 active:bg-gray-100'
+              }`}
             >
               <div className={`w-9 h-9 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white mr-3 shadow-sm`}>
                 <item.icon size={16} />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 text-left">
                 <div className="text-sm font-medium text-gray-800">{item.label}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{item.desc}</div>
               </div>
-              <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">即将上线</span>
-            </div>
+              {item.disabled ? (
+                <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">即将上线</span>
+              ) : (
+                <ChevronRight size={16} className="text-gray-300" />
+              )}
+            </button>
           ))}
         </div>
 
@@ -257,6 +273,7 @@ export default function Profile() {
                   onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                   className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                   placeholder="例如：按时起床"
+                  maxLength={20}
                 />
               </div>
 
@@ -265,10 +282,17 @@ export default function Profile() {
                 <input
                   type="number"
                   value={newCategory.points}
-                  onChange={(e) => setNewCategory({ ...newCategory, points: e.target.value })}
+                  onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || (/^\d+$/.test(val) && val.length <= 4)) {
+                    setNewCategory({ ...newCategory, points: val });
+                  }
+                }}
                   className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
-                  placeholder="例如：5"
+                  placeholder="1-1000整数"
                   min="1"
+                  max="1000"
+                  step="1"
                 />
               </div>
 
@@ -299,6 +323,14 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* 家长密码弹窗 */}
+      <PinModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={() => setShowPinModal(false)}
+        mode={pinMode}
+      />
     </div>
   );
 }

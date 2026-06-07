@@ -30,6 +30,7 @@ interface AppState {
   categories: PointCategory[];
   goals: Goal[];
   selectedChildId: string | null;
+  parentPin: string | null;
   
   loadData: () => void;
   addChild: (child: Omit<Child, 'id' | 'totalPoints' | 'createdAt'>) => void;
@@ -51,6 +52,8 @@ interface AppState {
   
   setSelectedChild: (id: string | null) => void;
   getChildPoints: (childId: string) => number;
+  setParentPin: (pin: string | null) => void;
+  verifyPin: (input: string) => boolean;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -60,6 +63,7 @@ export const useStore = create<AppState>((set, get) => ({
   categories: [...DEFAULT_EARN_CATEGORIES, ...DEFAULT_SPEND_CATEGORIES],
   goals: [],
   selectedChildId: null,
+  parentPin: null,
 
   loadData: () => {
     const children = storage.getChildren();
@@ -68,6 +72,7 @@ export const useStore = create<AppState>((set, get) => ({
     const categories = storage.getCategories();
     const selectedChildId = storage.getSelectedChild();
     const goals = storage.getGoals();
+    const parentPin = storage.getParentPin();
     set({
       children,
       records,
@@ -75,6 +80,7 @@ export const useStore = create<AppState>((set, get) => ({
       categories: categories.length > 0 ? categories : [...DEFAULT_EARN_CATEGORIES, ...DEFAULT_SPEND_CATEGORIES],
       selectedChildId,
       goals,
+      parentPin,
     });
   },
 
@@ -107,8 +113,18 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addRecord: (recordData) => {
+    const amount = Math.floor(recordData.amount);
+    if (!Number.isInteger(amount) || amount <= 0) return;
+    if (amount > 1000) return;
+
+    if (recordData.type === 'spend') {
+      const child = get().children.find(c => c.id === recordData.childId);
+      if (child && child.totalPoints < amount) return;
+    }
+
     const newRecord: PointRecord = {
       ...recordData,
+      amount,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
     };
@@ -116,7 +132,7 @@ export const useStore = create<AppState>((set, get) => ({
     const records = [...get().records, newRecord];
     const children = get().children.map(child => {
       if (child.id === recordData.childId) {
-        const pointChange = recordData.type === 'earn' ? recordData.amount : -recordData.amount;
+        const pointChange = recordData.type === 'earn' ? amount : -amount;
         return { ...child, totalPoints: child.totalPoints + pointChange };
       }
       return child;
@@ -146,8 +162,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addReward: (rewardData) => {
+    const points = Math.floor(rewardData.points);
+    if (!Number.isInteger(points) || points <= 0 || points > 1000) return;
     const newReward: Reward = {
       ...rewardData,
+      points,
       id: Date.now().toString(),
     };
     const rewards = [...get().rewards, newReward];
@@ -162,8 +181,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addCategory: (categoryData) => {
+    const points = Math.floor(categoryData.points);
+    if (!Number.isInteger(points) || points <= 0 || points > 1000) return;
     const newCategory: PointCategory = {
       ...categoryData,
+      points,
       id: Date.now().toString(),
     };
     const categories = [...get().categories, newCategory];
@@ -210,5 +232,16 @@ export const useStore = create<AppState>((set, get) => ({
   getChildPoints: (childId) => {
     const child = get().children.find(c => c.id === childId);
     return child?.totalPoints || 0;
+  },
+
+  setParentPin: (pin) => {
+    set({ parentPin: pin });
+    storage.setParentPin(pin);
+  },
+
+  verifyPin: (input) => {
+    const storedPin = get().parentPin;
+    if (!storedPin) return true;
+    return input === storedPin;
   },
 }));

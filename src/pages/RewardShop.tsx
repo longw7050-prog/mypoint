@@ -4,6 +4,7 @@ import { Reward } from '../types';
 import { Plus, Trash2, Gift, Check, X } from 'lucide-react';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import { useToastStore } from '../components/Toast';
+import PinModal from '../components/PinModal';
 
 const DEFAULT_REWARDS = [
   { name: '买冰淇淋', points: 5, icon: '🍦' },
@@ -15,12 +16,27 @@ const DEFAULT_REWARDS = [
 ];
 
 export default function RewardShop() {
-  const { children, rewards, addReward, deleteReward, addRecord, selectedChildId, setSelectedChild } = useStore();
+  const { children, rewards, addReward, deleteReward, addRecord, selectedChildId, setSelectedChild, parentPin } = useStore();
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const addToast = useToastStore(state => state.addToast);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newReward, setNewReward] = useState({ name: '', points: '', icon: '' });
   const [exchangeSuccess, setExchangeSuccess] = useState<string | null>(null);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingExchange, setPendingExchange] = useState<(() => void) | null>(null);
+
+  const doExchange = (reward: Reward, childId: string) => {
+    addRecord({
+      childId,
+      type: 'spend',
+      amount: reward.points,
+      reason: `兑换：${reward.name}`,
+      date: new Date().toISOString(),
+    });
+    setExchangeSuccess(reward.id);
+    addToast(`兑换成功：${reward.name}`, 'success');
+    setTimeout(() => setExchangeSuccess(null), 2000);
+  };
 
   const handleExchange = (reward: Reward) => {
     if (!selectedChildId) {
@@ -31,29 +47,32 @@ export default function RewardShop() {
     const child = children.find(c => c.id === selectedChildId);
     if (!child) return;
 
+    if (reward.points > 1000) {
+      addToast('单次消费积分不能超过1000', 'error');
+      return;
+    }
+
     if (child.totalPoints < reward.points) {
       addToast(`积分不足！当前${child.totalPoints}分，需要${reward.points}分`, 'error');
       return;
     }
 
-    openConfirm({
-      title: '确认兑换',
-      message: `使用 ${reward.points} 积分兑换「${reward.name}」？等值 ${reward.points} 元。`,
-      confirmText: '确认兑换',
-      variant: 'warning',
-      onConfirm: () => {
-        addRecord({
-          childId: selectedChildId,
-          type: 'spend',
-          amount: reward.points,
-          reason: `兑换：${reward.name}`,
-          date: new Date().toISOString(),
-        });
-        setExchangeSuccess(reward.id);
-        addToast(`兑换成功：${reward.name}`, 'success');
-        setTimeout(() => setExchangeSuccess(null), 2000);
-      },
-    });
+    const executeExchange = () => {
+      openConfirm({
+        title: '确认兑换',
+        message: `使用 ${reward.points} 积分兑换「${reward.name}」？等值 ${reward.points} 元。`,
+        confirmText: '确认兑换',
+        variant: 'warning',
+        onConfirm: () => doExchange(reward, selectedChildId),
+      });
+    };
+
+    if (parentPin) {
+      setPendingExchange(() => executeExchange);
+      setShowPinModal(true);
+    } else {
+      executeExchange();
+    }
   };
 
   const handleDeleteReward = (id: string, name: string) => {
@@ -300,6 +319,7 @@ export default function RewardShop() {
                     onChange={(e) => setNewReward({ ...newReward, name: e.target.value })}
                     className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                     placeholder="例如：买冰淇淋"
+                    maxLength={20}
                     required
                   />
                 </div>
@@ -309,11 +329,18 @@ export default function RewardShop() {
                   <input
                     type="number"
                     value={newReward.points}
-                    onChange={(e) => setNewReward({ ...newReward, points: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || (/^\d+$/.test(val) && val.length <= 4)) {
+                        setNewReward({ ...newReward, points: val });
+                      }
+                    }}
                     className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
-                    placeholder="例如：5"
+                    placeholder="1-1000整数"
                     required
                     min="1"
+                    max="1000"
+                    step="1"
                   />
                 </div>
 
@@ -324,6 +351,7 @@ export default function RewardShop() {
                     value={newReward.icon}
                     onChange={(e) => setNewReward({ ...newReward, icon: e.target.value })}
                     className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
+                    maxLength={4}
                     placeholder="输入一个表情符号"
                   />
                 </div>
@@ -348,6 +376,18 @@ export default function RewardShop() {
           </div>
         )}
       </div>
+
+      {/* 家长密码验证 */}
+      <PinModal
+        isOpen={showPinModal}
+        onClose={() => { setShowPinModal(false); setPendingExchange(null); }}
+        onSuccess={() => {
+          setShowPinModal(false);
+          pendingExchange?.();
+          setPendingExchange(null);
+        }}
+        mode="verify"
+      />
     </div>
   );
 }

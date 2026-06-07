@@ -52,7 +52,7 @@ export default function ChildCard({ child, isSelected = false, onEdit, onDelete,
             {isSelected ? <Check size={22} /> : (child.avatar || child.name.charAt(0))}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-gray-800 truncate">{child.name}</h3>
+            <h3 className="text-sm font-semibold text-gray-800 truncate max-w-[120px]">{child.name}</h3>
             <p className="text-xs text-gray-400">{child.age}岁</p>
           </div>
         </div>

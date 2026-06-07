@@ -164,7 +164,7 @@ export default function Children() {
                     {child.avatar || child.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-800 truncate">{child.name}</h3>
+                    <h3 className="text-sm font-semibold text-gray-800 truncate max-w-[120px]">{child.name}</h3>
                     <p className="text-xs text-gray-400">{child.age}岁</p>
                   </div>
                 </div>
@@ -227,6 +227,7 @@ export default function Children() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                     placeholder="输入孩子姓名"
+                    maxLength={20}
                     required
                   />
                 </div>
@@ -236,7 +237,12 @@ export default function Children() {
                   <input
                     type="number"
                     value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                    onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (/^\d+$/.test(val) && val.length <= 2)) {
+                      setFormData({ ...formData, age: val });
+                    }
+                  }}
                     className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                     placeholder="输入孩子年龄"
                     required

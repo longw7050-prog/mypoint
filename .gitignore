@@ -1,6 +1,7 @@
 node_modules
 test_screenshots_v2
 test_screenshots
+test_chaos
 dist
 package-lock.json
 .env

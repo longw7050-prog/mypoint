@@ -2,19 +2,22 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import ChildCard from '../components/ChildCard';
+import PinModal from '../components/PinModal';
 import { Plus, Users, Sparkles, TrendingUp, ChevronRight, X, Target, Trash2 } from 'lucide-react';
 import { useToastStore } from '../components/Toast';
 import { useConfirmStore } from '../components/ConfirmDialog';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { children, categories, records, goals, loadData, addRecord, addGoal, deleteGoal, selectedChildId, setSelectedChild } = useStore();
+  const { children, categories, records, goals, loadData, addRecord, addGoal, deleteGoal, selectedChildId, setSelectedChild, parentPin } = useStore();
   const addToast = useToastStore(state => state.addToast);
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const [showWelcome, setShowWelcome] = useState(false);
   const [pointsBounce, setPointsBounce] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoal, setNewGoal] = useState({ name: '', targetPoints: '', icon: '🎯', childId: '' });
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const pointsRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -46,22 +49,37 @@ export default function Home() {
 
   const earnCategories = categories.filter(c => c.type === 'earn');
 
+  const requirePin = (action: () => void) => {
+    if (parentPin) {
+      setPendingAction(() => action);
+      setShowPinModal(true);
+    } else {
+      action();
+    }
+  };
+
   const handleQuickAdd = (cat: typeof earnCategories[0]) => {
     if (!selectedChildId) {
       addToast('请先选择一个孩子', 'warning');
       return;
     }
-    const child = children.find(c => c.id === selectedChildId);
-    addRecord({
-      childId: selectedChildId,
-      type: 'earn',
-      amount: cat.points,
-      reason: cat.name,
-      date: new Date().toISOString(),
+    if (cat.points > 1000) {
+      addToast('单次积分不能超过1000', 'error');
+      return;
+    }
+    requirePin(() => {
+      const child = children.find(c => c.id === selectedChildId);
+      addRecord({
+        childId: selectedChildId,
+        type: 'earn',
+        amount: cat.points,
+        reason: cat.name,
+        date: new Date().toISOString(),
+      });
+      addToast(`${child?.name || '孩子'} +${cat.points} ${cat.name}`, 'success');
+      setPointsBounce(true);
+      setTimeout(() => setPointsBounce(false), 400);
     });
-    addToast(`${child?.name || '孩子'} +${cat.points} ${cat.name}`, 'success');
-    setPointsBounce(true);
-    setTimeout(() => setPointsBounce(false), 400);
   };
 
   const handleAddGoal = () => {
@@ -144,7 +162,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="text-base font-semibold text-gray-800">鼓励储蓄罐</h1>
-              <p className="text-xs text-gray-400 mt-0.5">记录每一次进步</p>
+              <p className="text-xs text-gray-400 mt-0.5">童心奔途，收获每一份成长</p>
             </div>
             <button
               onClick={() => navigate('/records')}
@@ -376,6 +394,7 @@ export default function Home() {
                   onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
                   className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                   placeholder="例如：买乐高积木"
+                  maxLength={20}
                 />
               </div>
               <div>
@@ -383,7 +402,12 @@ export default function Home() {
                 <input
                   type="number"
                   value={newGoal.targetPoints}
-                  onChange={(e) => setNewGoal({ ...newGoal, targetPoints: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (/^\d+$/.test(val) && val.length <= 4)) {
+                      setNewGoal({ ...newGoal, targetPoints: val });
+                    }
+                  }}
                   className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                   placeholder="例如：100"
                   min="1"
@@ -408,6 +432,18 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* 家长密码验证 */}
+      <PinModal
+        isOpen={showPinModal}
+        onClose={() => { setShowPinModal(false); setPendingAction(null); }}
+        onSuccess={() => {
+          setShowPinModal(false);
+          pendingAction?.();
+          setPendingAction(null);
+        }}
+        mode="verify"
+      />
     </div>
   );
 }

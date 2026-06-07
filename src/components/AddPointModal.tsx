@@ -31,6 +31,7 @@ import { PointCategory } from '../types';
 import { useToastStore } from '../components/Toast';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import AvatarPicker from './AvatarPicker';
+import PinModal from './PinModal';
 
 interface AddPointModalProps {
   isOpen: boolean;
@@ -45,15 +46,23 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
   const [selectedPreset, setSelectedPreset] = useState('');
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', points: '', icon: '🌟' });
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState<(() => void) | null>(null);
 
   const addRecord = useStore(state => state.addRecord);
   const categories = useStore(state => state.categories);
   const addCategory = useStore(state => state.addCategory);
   const deleteCategory = useStore(state => state.deleteCategory);
+  const children = useStore(state => state.children);
+  const selectedChildId = useStore(state => state.selectedChildId);
+  const parentPin = useStore(state => state.parentPin);
   const addToast = useToastStore(state => state.addToast);
   const openConfirm = useConfirmStore(state => state.openConfirm);
 
   const filteredCategories = categories.filter(c => c.type === type);
+
+  const currentChild = children.find(c => c.id === (childId || selectedChildId));
+  const currentBalance = currentChild?.totalPoints ?? 0;
 
   const handlePresetSelect = (cat: PointCategory) => {
     setSelectedPreset(cat.id);
@@ -92,20 +101,18 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!amount || !reason) return;
-
+  const doSubmit = () => {
+    const numAmount = parseInt(amount);
     addRecord({
       childId,
       type,
-      amount: parseInt(amount),
+      amount: numAmount,
       reason,
       date: new Date().toISOString(),
     });
 
     addToast(
-      type === 'earn' ? `获得 ${amount} 积分：${reason}` : `消费 ${amount} 积分：${reason}`,
+      type === 'earn' ? `获得 ${numAmount} 积分：${reason}` : `消费 ${numAmount} 积分：${reason}`,
       type === 'earn' ? 'success' : 'info'
     );
 
@@ -113,6 +120,32 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
     setReason('');
     setSelectedPreset('');
     onClose();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !reason) return;
+
+    const numAmount = parseInt(amount);
+    if (!Number.isInteger(numAmount) || numAmount <= 0) {
+      addToast('积分必须为正整数', 'error');
+      return;
+    }
+    if (numAmount > 1000) {
+      addToast('单次积分不能超过1000', 'error');
+      return;
+    }
+    if (type === 'spend' && numAmount > currentBalance) {
+      addToast(`积分不足！当前余额${currentBalance}分，需要${numAmount}分`, 'error');
+      return;
+    }
+
+    if (parentPin) {
+      setPendingSubmit(() => doSubmit);
+      setShowPinModal(true);
+    } else {
+      doSubmit();
+    }
   };
 
   if (!isOpen) return null;
@@ -177,11 +210,17 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
                   onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                   className="w-full px-3 py-2 bg-white border-0 rounded-lg focus:ring-1 focus:ring-primary text-sm"
                   placeholder="类别名称，如：按时起床"
+                  maxLength={20}
                 />
                 <input
                   type="number"
                   value={newCategory.points}
-                  onChange={(e) => setNewCategory({ ...newCategory, points: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (/^\d+$/.test(val) && val.length <= 4)) {
+                      setNewCategory({ ...newCategory, points: val });
+                    }
+                  }}
                   className="w-full px-3 py-2 bg-white border-0 rounded-lg focus:ring-1 focus:ring-primary text-sm"
                   placeholder="积分数值"
                   min="1"
@@ -248,12 +287,26 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
             <input
               type="number"
               value={amount}
-              onChange={(e) => { setAmount(e.target.value); setSelectedPreset(''); }}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || (/^\d+$/.test(val) && val.length <= 4)) {
+                  setAmount(val);
+                  setSelectedPreset('');
+                }
+              }}
               className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-1 focus:ring-primary text-base"
-              placeholder="输入积分数量"
+              placeholder="输入积分数量（1-1000整数）"
               required
               min="1"
+              max="1000"
+              step="1"
             />
+            {type === 'spend' && currentBalance > 0 && (
+              <p className="text-xs text-gray-400 mt-1">当前余额：{currentBalance}分</p>
+            )}
+            {type === 'spend' && currentBalance === 0 && (
+              <p className="text-xs text-red-400 mt-1">当前余额不足，无法消费</p>
+            )}
           </div>
 
           {/* 原因说明 */}
@@ -266,6 +319,7 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
               className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-1 focus:ring-primary text-base"
               placeholder="输入原因说明"
               required
+              maxLength={50}
             />
           </div>
 
@@ -291,6 +345,18 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
           </div>
         </form>
       </div>
+
+      {/* 家长密码验证 */}
+      <PinModal
+        isOpen={showPinModal}
+        onClose={() => { setShowPinModal(false); setPendingSubmit(null); }}
+        onSuccess={() => {
+          setShowPinModal(false);
+          pendingSubmit?.();
+          setPendingSubmit(null);
+        }}
+        mode="verify"
+      />
     </div>
   );
 }

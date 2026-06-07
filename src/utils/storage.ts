@@ -27,6 +27,7 @@ const STORAGE_KEYS = {
   CATEGORIES: 'mypoint_categories',
   SELECTED_CHILD: 'mypoint_selected_child',
   GOALS: 'mypoint_goals',
+  PARENT_PIN: 'mypoint_parent_pin',
 };
 
 export const storage = {
@@ -85,5 +86,17 @@ export const storage = {
 
   setGoals: (goals: Goal[]): void => {
     localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+  },
+
+  getParentPin: (): string | null => {
+    return localStorage.getItem(STORAGE_KEYS.PARENT_PIN);
+  },
+
+  setParentPin: (pin: string | null): void => {
+    if (pin) {
+      localStorage.setItem(STORAGE_KEYS.PARENT_PIN, pin);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.PARENT_PIN);
+    }
   },
 };
