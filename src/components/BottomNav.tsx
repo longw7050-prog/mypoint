@@ -20,7 +20,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white to-orange-50/20 border-t border-orange-100/50 z-40 md:hidden safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 md:hidden safe-area-inset-bottom">
       <div className="flex items-center justify-around h-16">
         {navItems.map(({ path, label, icon: Icon }) => {
           const isActive = getIsActive(path);
