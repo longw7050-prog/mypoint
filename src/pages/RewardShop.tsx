@@ -1,34 +1,23 @@
-/**
- * RewardShop.tsx - 奖励商城页
- * 
- * 【作用】
- * 展示可兑换的奖励列表，支持添加/删除自定义奖励
- * 选择孩子后点击奖励发起积分兑换
- * 
- * 【依赖】
- * - useStore: 获取 children/rewards 数据，执行删除奖励
- * - ConfirmDialog: 删除奖励时的二次确认
- * - Toast: 操作反馈提示
- * 
- * 【被调用】
- * - App.tsx (路由 /rewards)
- * 
- * 【调用关系】
- * - ConfirmDialog: 删除奖励时的二次确认
- * - AddPointModal: 点击兑换时打开（消费积分）
- */
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Reward } from '../types';
-import { Plus, Trash2, Gift, Check } from 'lucide-react';
+import { Plus, Trash2, Gift, Check, X } from 'lucide-react';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import { useToastStore } from '../components/Toast';
 
+const DEFAULT_REWARDS = [
+  { name: '买冰淇淋', points: 5, icon: '🍦' },
+  { name: '买零食', points: 10, icon: '🍭' },
+  { name: '看电视30分钟', points: 15, icon: '📺' },
+  { name: '买玩具', points: 50, icon: '🧸' },
+  { name: '去游乐园', points: 100, icon: '🎢' },
+  { name: '买新书', points: 30, icon: '📚' },
+];
+
 export default function RewardShop() {
-  const { children, rewards, addReward, deleteReward, addRecord } = useStore();
+  const { children, rewards, addReward, deleteReward, addRecord, selectedChildId, setSelectedChild, loadData } = useStore();
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const addToast = useToastStore(state => state.addToast);
-  const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newReward, setNewReward] = useState({ name: '', points: '', icon: '' });
   const [exchangeSuccess, setExchangeSuccess] = useState<string | null>(null);
@@ -95,6 +84,13 @@ export default function RewardShop() {
     addToast('奖励添加成功', 'success');
   };
 
+  const handleAddDefaultRewards = () => {
+    DEFAULT_REWARDS.forEach(r => {
+      addReward({ name: r.name, points: r.points, icon: r.icon });
+    });
+    addToast('已添加默认奖励', 'success');
+  };
+
   const selectedChild = children.find(c => c.id === selectedChildId);
 
   return (
@@ -116,8 +112,8 @@ export default function RewardShop() {
             <div className="flex items-center space-x-3">
               <label className="text-xs text-gray-500 whitespace-nowrap">选择孩子</label>
               <select
-                value={selectedChildId}
-                onChange={(e) => setSelectedChildId(e.target.value)}
+                value={selectedChildId || ''}
+                onChange={(e) => setSelectedChild(e.target.value || null)}
                 className="flex-1 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm text-gray-600 focus:ring-1 focus:ring-primary"
               >
                 <option value="">请选择孩子</option>
@@ -153,7 +149,7 @@ export default function RewardShop() {
           <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
             <div className="text-4xl mb-3">👶</div>
             <h3 className="text-base font-semibold text-gray-800 mb-1">还没有添加孩子</h3>
-            <p className="text-xs text-gray-400">请先在"我的"中添加孩子</p>
+            <p className="text-xs text-gray-400">请先在首页添加孩子</p>
           </div>
         ) : (
           <>
@@ -163,65 +159,95 @@ export default function RewardShop() {
                 <Gift size={14} className="text-primary" />
                 <span>可兑换奖励</span>
               </h2>
+              {rewards.length === 0 && (
+                <button
+                  onClick={handleAddDefaultRewards}
+                  className="text-xs text-primary font-medium hover:underline"
+                >
+                  添加默认奖励
+                </button>
+              )}
             </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-              {rewards.map((reward) => {
-                const canExchange = selectedChild && selectedChild.totalPoints >= reward.points;
-                
-                return (
-                  <div
-                    key={reward.id}
-                    className={`bg-white rounded-2xl shadow-sm overflow-hidden relative transition-all ${
-                      exchangeSuccess === reward.id
-                        ? 'ring-2 ring-green-500'
-                        : 'hover:shadow-md'
-                    }`}
+
+            {rewards.length === 0 ? (
+              <div className="bg-white rounded-2xl p-8 shadow-sm text-center mb-4">
+                <div className="text-4xl mb-3">🎁</div>
+                <h3 className="text-base font-semibold text-gray-800 mb-1">还没有奖励</h3>
+                <p className="text-xs text-gray-400 mb-4">添加一些奖励让孩子用积分兑换</p>
+                <div className="flex space-x-2 justify-center">
+                  <button
+                    onClick={handleAddDefaultRewards}
+                    className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg text-xs font-medium active:scale-95 transition-transform shadow-sm"
                   >
-                    {exchangeSuccess === reward.id && (
-                      <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center z-10">
-                        <div className="bg-green-500 text-white rounded-full p-2 animate-scaleIn">
-                          <Check size={20} />
+                    使用默认奖励
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    自定义添加
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                {rewards.map((reward) => {
+                  const canExchange = selectedChild && selectedChild.totalPoints >= reward.points;
+                  
+                  return (
+                    <div
+                      key={reward.id}
+                      className={`bg-white rounded-2xl shadow-sm overflow-hidden relative transition-all ${
+                        exchangeSuccess === reward.id
+                          ? 'ring-2 ring-green-500'
+                          : 'hover:shadow-md'
+                      }`}
+                    >
+                      {exchangeSuccess === reward.id && (
+                        <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center z-10">
+                          <div className="bg-green-500 text-white rounded-full p-2 animate-scaleIn">
+                            <Check size={20} />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    <div className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="text-2xl">{reward.icon}</div>
+                      )}
+                      
+                      <div className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="text-2xl">{reward.icon}</div>
+                          <button
+                            onClick={() => handleDeleteReward(reward.id, reward.name)}
+                            className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+
+                        <h3 className="text-sm font-semibold text-gray-800 mb-1 truncate">{reward.name}</h3>
+
+                        <div className="flex items-baseline mb-3">
+                          <span className="text-lg font-bold text-primary">{reward.points}</span>
+                          <span className="text-xs text-gray-400 ml-1">积分</span>
+                        </div>
+
                         <button
-                          onClick={() => handleDeleteReward(reward.id, reward.name)}
-                          className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => handleExchange(reward)}
+                          disabled={!selectedChildId || !canExchange}
+                          className={`w-full py-2 rounded-xl font-medium transition-colors text-xs ${
+                            !selectedChildId
+                              ? 'bg-gray-50 text-gray-300'
+                              : canExchange
+                              ? 'bg-gradient-to-r from-primary to-primary/80 text-white hover:shadow-sm active:scale-[0.98]'
+                              : 'bg-gray-50 text-gray-300'
+                          }`}
                         >
-                          <Trash2 size={12} />
+                          {!selectedChildId ? '选孩子' : canExchange ? '兑换' : '不足'}
                         </button>
                       </div>
-
-                      <h3 className="text-sm font-semibold text-gray-800 mb-1 truncate">{reward.name}</h3>
-
-                      <div className="flex items-baseline mb-3">
-                        <span className="text-lg font-bold text-primary">{reward.points}</span>
-                        <span className="text-xs text-gray-400 ml-1">积分</span>
-                      </div>
-
-                      <button
-                        onClick={() => handleExchange(reward)}
-                        disabled={!selectedChildId || !canExchange}
-                        className={`w-full py-2 rounded-xl font-medium transition-colors text-xs ${
-                          !selectedChildId
-                            ? 'bg-gray-50 text-gray-300'
-                            : canExchange
-                            ? 'bg-gradient-to-r from-primary to-primary/80 text-white hover:shadow-sm active:scale-[0.98]'
-                            : 'bg-gray-50 text-gray-300'
-                        }`}
-                      >
-                        {!selectedChildId ? '选孩子' : canExchange ? '兑换' : '不足'}
-                      </button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* 积分规则 */}
             <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -261,7 +287,7 @@ export default function RewardShop() {
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <Plus className="rotate-45" size={20} />
+                  <X size={20} />
                 </button>
               </div>
 

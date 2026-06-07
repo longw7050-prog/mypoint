@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Gift, User } from 'lucide-react';
+import { Home, Gift, User, ClipboardList } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '首页', icon: Home },
+  { path: '/records', label: '记录', icon: ClipboardList },
   { path: '/rewards', label: '礼品', icon: Gift },
   { path: '/profile', label: '我的', icon: User },
 ];
@@ -12,7 +13,9 @@ export default function Header() {
 
   const getIsActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
-    if (path === '/profile') return ['/profile', '/records', '/children'].includes(location.pathname);
+    if (path === '/records') return location.pathname === '/records';
+    if (path === '/rewards') return location.pathname === '/rewards';
+    if (path === '/profile') return ['/profile', '/children'].includes(location.pathname);
     return location.pathname === path;
   };
 

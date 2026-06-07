@@ -50,6 +50,15 @@ export interface PointCategory {
   type: 'earn' | 'spend';
 }
 
+export interface Goal {
+  id: string;
+  childId: string;
+  name: string;
+  targetPoints: number;
+  icon: string;
+  createdAt: string;
+}
+
 export const DEFAULT_EARN_CATEGORIES: PointCategory[] = [
   { id: 'ec-1', name: '小红花奖励', points: 2, icon: '🌸', type: 'earn' },
   { id: 'ec-2', name: '帮助做家务', points: 5, icon: '🧹', type: 'earn' },

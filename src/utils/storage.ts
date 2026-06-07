@@ -1,4 +1,4 @@
-import { Child, PointRecord, Reward, PointCategory } from '../types';
+import { Child, PointRecord, Reward, PointCategory, Goal } from '../types';
 
 /**
  * storage.ts - 本地存储工具
@@ -25,6 +25,8 @@ const STORAGE_KEYS = {
   RECORDS: 'mypoint_records',
   REWARDS: 'mypoint_rewards',
   CATEGORIES: 'mypoint_categories',
+  SELECTED_CHILD: 'mypoint_selected_child',
+  GOALS: 'mypoint_goals',
 };
 
 export const storage = {
@@ -62,5 +64,26 @@ export const storage = {
 
   setCategories: (categories: PointCategory[]): void => {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+  },
+
+  getSelectedChild: (): string | null => {
+    return localStorage.getItem(STORAGE_KEYS.SELECTED_CHILD);
+  },
+
+  setSelectedChild: (id: string | null): void => {
+    if (id) {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_CHILD, id);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_CHILD);
+    }
+  },
+
+  getGoals: (): Goal[] => {
+    const data = localStorage.getItem(STORAGE_KEYS.GOALS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setGoals: (goals: Goal[]): void => {
+    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
   },
 };

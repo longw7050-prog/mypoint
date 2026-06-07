@@ -20,7 +20,7 @@
  * - 所有页面和组件通过 useStore() hook 获取/修改状态
  */
 import { create } from 'zustand';
-import { Child, PointRecord, Reward, PointCategory, DEFAULT_EARN_CATEGORIES, DEFAULT_SPEND_CATEGORIES } from '../types';
+import { Child, PointRecord, Reward, PointCategory, Goal, DEFAULT_EARN_CATEGORIES, DEFAULT_SPEND_CATEGORIES } from '../types';
 import { storage } from '../utils/storage';
 
 interface AppState {
@@ -28,6 +28,7 @@ interface AppState {
   records: PointRecord[];
   rewards: Reward[];
   categories: PointCategory[];
+  goals: Goal[];
   selectedChildId: string | null;
   
   loadData: () => void;
@@ -45,6 +46,9 @@ interface AppState {
   updateCategory: (id: string, updates: Partial<PointCategory>) => void;
   deleteCategory: (id: string) => void;
   
+  addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => void;
+  deleteGoal: (id: string) => void;
+  
   setSelectedChild: (id: string | null) => void;
   getChildPoints: (childId: string) => number;
 }
@@ -54,6 +58,7 @@ export const useStore = create<AppState>((set, get) => ({
   records: [],
   rewards: [],
   categories: [...DEFAULT_EARN_CATEGORIES, ...DEFAULT_SPEND_CATEGORIES],
+  goals: [],
   selectedChildId: null,
 
   loadData: () => {
@@ -61,11 +66,15 @@ export const useStore = create<AppState>((set, get) => ({
     const records = storage.getRecords();
     const rewards = storage.getRewards();
     const categories = storage.getCategories();
+    const selectedChildId = storage.getSelectedChild();
+    const goals = storage.getGoals();
     set({
       children,
       records,
       rewards: rewards.length > 0 ? rewards : [],
       categories: categories.length > 0 ? categories : [...DEFAULT_EARN_CATEGORIES, ...DEFAULT_SPEND_CATEGORIES],
+      selectedChildId,
+      goals,
     });
   },
 
@@ -176,8 +185,26 @@ export const useStore = create<AppState>((set, get) => ({
     storage.setCategories(categories);
   },
 
+  addGoal: (goalData) => {
+    const newGoal: Goal = {
+      ...goalData,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    const goals = [...get().goals, newGoal];
+    set({ goals });
+    storage.setGoals(goals);
+  },
+
+  deleteGoal: (id) => {
+    const goals = get().goals.filter(g => g.id !== id);
+    set({ goals });
+    storage.setGoals(goals);
+  },
+
   setSelectedChild: (id) => {
     set({ selectedChildId: id });
+    storage.setSelectedChild(id);
   },
 
   getChildPoints: (childId) => {

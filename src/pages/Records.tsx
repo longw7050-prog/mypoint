@@ -1,41 +1,18 @@
-/**
- * Records.tsx - 积分记录页
- * 
- * 【作用】
- * 展示所有积分记录，按日期分组（今天/昨天/具体日期）
- * 支持按孩子筛选、按类型筛选（全部/获得/消费）
- * 
- * 【依赖】
- * - useStore: 获取 children/records 数据
- * - PointRecordItem: 单条积分记录的展示组件
- * - AddPointModal: 添加积分记录的弹窗
- * - SegmentedControl: 类型筛选的分段控件
- * - react-router-dom: 路由参数处理（child=X 预选孩子）
- * 
- * 【被调用】
- * - App.tsx (路由 /records)
- * 
- * 【调用关系】
- * - PointRecordItem: 循环渲染每条积分记录
- * - AddPointModal: 点击"添加记录"按钮打开
- * - SegmentedControl: 切换全部/获得/消费筛选
- */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import PointRecordItem from '../components/PointRecordItem';
 import AddPointModal from '../components/AddPointModal';
 import SegmentedControl from '../components/SegmentedControl';
-import { Plus } from 'lucide-react';
+import { Plus, BarChart3 } from 'lucide-react';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import { useToastStore } from '../components/Toast';
 
 export default function Records() {
   const [searchParams] = useSearchParams();
-  const { children, records, loadData, deleteRecord } = useStore();
+  const { children, records, loadData, deleteRecord, selectedChildId, setSelectedChild } = useStore();
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const addToast = useToastStore(state => state.addToast);
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'earn' | 'spend'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -43,13 +20,13 @@ export default function Records() {
     loadData();
     const childId = searchParams.get('child');
     if (childId) {
-      setSelectedChildId(childId);
+      setSelectedChild(childId);
     }
     const typeParam = searchParams.get('type');
     if (typeParam === 'earn' || typeParam === 'spend') {
       setFilterType(typeParam);
     }
-  }, [loadData, searchParams]);
+  }, [loadData, searchParams, setSelectedChild]);
 
   const filteredRecords = records
     .filter(record => !selectedChildId || record.childId === selectedChildId)
@@ -57,6 +34,25 @@ export default function Records() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const selectedChild = children.find(c => c.id === selectedChildId);
+
+  // 最近7天趋势数据
+  const last7Days: { label: string; earn: number; spend: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toDateString();
+    const dayRecords = records.filter(r => {
+      const rDate = new Date(r.date);
+      const matchChild = !selectedChildId || r.childId === selectedChildId;
+      return rDate.toDateString() === dateStr && matchChild;
+    });
+    last7Days.push({
+      label: i === 0 ? '今天' : i === 1 ? '昨天' : `${date.getMonth() + 1}/${date.getDate()}`,
+      earn: dayRecords.filter(r => r.type === 'earn').reduce((sum, r) => sum + r.amount, 0),
+      spend: dayRecords.filter(r => r.type === 'spend').reduce((sum, r) => sum + r.amount, 0),
+    });
+  }
+  const maxDayValue = Math.max(...last7Days.map(d => Math.max(d.earn, d.spend)), 1);
 
   // 按日期分组
   const groupedRecords: { label: string; records: typeof filteredRecords }[] = [];
@@ -100,6 +96,14 @@ export default function Records() {
     });
   };
 
+  const handleAddClick = () => {
+    if (!selectedChildId) {
+      addToast('请先选择一个孩子', 'warning');
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   const filterOptions = [
     { value: 'all' as const, label: '全部' },
     { value: 'earn' as const, label: '获得' },
@@ -126,7 +130,7 @@ export default function Records() {
               <label className="text-xs text-gray-500 whitespace-nowrap">选择孩子</label>
               <select
                 value={selectedChildId || ''}
-                onChange={(e) => setSelectedChildId(e.target.value || null)}
+                onChange={(e) => setSelectedChild(e.target.value || null)}
                 className="flex-1 px-3 py-2 bg-gray-50 border-0 rounded-lg text-sm text-gray-600 focus:ring-1 focus:ring-primary"
               >
                 <option value="">所有孩子</option>
@@ -145,15 +149,13 @@ export default function Records() {
                 onChange={setFilterType}
               />
 
-              {selectedChildId && (
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg text-xs font-medium active:scale-95 transition-transform shadow-sm"
-                >
-                  <Plus size={14} />
-                  <span>添加</span>
-                </button>
-              )}
+              <button
+                onClick={handleAddClick}
+                className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg text-xs font-medium active:scale-95 transition-transform shadow-sm"
+              >
+                <Plus size={14} />
+                <span>添加</span>
+              </button>
             </div>
           </div>
         </div>
@@ -169,6 +171,51 @@ export default function Records() {
               <div className="text-right">
                 <p className="text-xs text-gray-400">可用积分</p>
                 <p className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{selectedChild.totalPoints}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 近7天趋势图 */}
+        {records.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm mb-3">
+            <h2 className="text-sm font-semibold text-gray-700 flex items-center space-x-1.5 mb-3">
+              <BarChart3 size={14} className="text-primary" />
+              <span>近7天趋势</span>
+            </h2>
+            <div className="flex items-end space-x-1 h-24">
+              {last7Days.map((day, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center space-y-1">
+                  <div className="w-full flex flex-col items-center space-y-0.5" style={{ height: '72px' }}>
+                    <div className="flex-1 w-full flex flex-col justify-end items-center space-y-0.5">
+                      {day.earn > 0 && (
+                        <div
+                          className="w-3/5 bg-gradient-to-t from-green-400 to-emerald-300 rounded-t-sm transition-all duration-500 min-h-[2px]"
+                          style={{ height: `${(day.earn / maxDayValue) * 56}px` }}
+                          title={`获得 +${day.earn}`}
+                        />
+                      )}
+                      {day.spend > 0 && (
+                        <div
+                          className="w-3/5 bg-gradient-to-t from-orange-400 to-amber-300 rounded-t-sm transition-all duration-500 min-h-[2px]"
+                          style={{ height: `${(day.spend / maxDayValue) * 56}px` }}
+                          title={`消费 -${day.spend}`}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-gray-400">{day.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-center space-x-4 mt-2">
+              <div className="flex items-center space-x-1">
+                <div className="w-2.5 h-2.5 bg-gradient-to-r from-green-400 to-emerald-300 rounded-sm" />
+                <span className="text-[10px] text-gray-400">获得</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2.5 h-2.5 bg-gradient-to-r from-orange-400 to-amber-300 rounded-sm" />
+                <span className="text-[10px] text-gray-400">消费</span>
               </div>
             </div>
           </div>

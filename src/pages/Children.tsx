@@ -23,7 +23,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Child } from '../types';
-import { X, UserPlus, Star } from 'lucide-react';
+import { X, UserPlus, Star, ArrowLeft } from 'lucide-react';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import { useToastStore } from '../components/Toast';
 import AvatarPicker from '../components/AvatarPicker';
@@ -120,12 +120,20 @@ export default function Children() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50/50 via-white to-gray-50 pb-4">
       <div className="container mx-auto max-w-6xl px-4 pt-4">
-        {/* 标题区 + 添加按钮 */}
+        {/* 标题区 + 返回 + 添加按钮 */}
         <div className="bg-gradient-to-br from-white to-orange-50/30 rounded-2xl p-5 shadow-sm mb-3 border border-orange-100/50">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-semibold text-gray-800">孩子管理</h1>
-              <p className="text-xs text-gray-400 mt-0.5">管理家庭中的孩子信息</p>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => navigate('/')}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-400"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <h1 className="text-base font-semibold text-gray-800">孩子管理</h1>
+                <p className="text-xs text-gray-400 mt-0.5">管理家庭中的孩子信息</p>
+              </div>
             </div>
             <button
               onClick={() => {
