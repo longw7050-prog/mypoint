@@ -1,21 +1,26 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, History, Gift } from 'lucide-react';
+import { Home, Gift, User } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '首页', icon: Home },
-  { path: '/children', label: '管理', icon: Users },
-  { path: '/records', label: '记录', icon: History },
-  { path: '/rewards', label: '商城', icon: Gift },
+  { path: '/rewards', label: '礼品', icon: Gift },
+  { path: '/profile', label: '我的', icon: User },
 ];
 
 export default function BottomNav() {
   const location = useLocation();
 
+  const getIsActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    if (path === '/profile') return ['/profile', '/records', '/children'].includes(location.pathname);
+    return location.pathname === path;
+  };
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 md:hidden safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-white to-orange-50/20 border-t border-orange-100/50 z-40 md:hidden safe-area-inset-bottom">
       <div className="flex items-center justify-around h-16">
         {navItems.map(({ path, label, icon: Icon }) => {
-          const isActive = location.pathname === path;
+          const isActive = getIsActive(path);
           return (
             <Link
               key={path}

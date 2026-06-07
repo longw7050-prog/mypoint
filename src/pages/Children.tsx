@@ -23,7 +23,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Child } from '../types';
-import { X, UserPlus } from 'lucide-react';
+import { X, UserPlus, Star } from 'lucide-react';
 import { useConfirmStore } from '../components/ConfirmDialog';
 import { useToastStore } from '../components/Toast';
 import AvatarPicker from '../components/AvatarPicker';
@@ -118,63 +118,69 @@ export default function Children() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent/5 p-4 sm:p-8">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">孩子管理</h1>
-            <p className="text-sm sm:text-base text-gray-600">管理家庭中的孩子信息</p>
+    <div className="min-h-screen bg-gradient-to-b from-orange-50/50 via-white to-gray-50 pb-4">
+      <div className="container mx-auto max-w-6xl px-4 pt-4">
+        {/* 标题区 + 添加按钮 */}
+        <div className="bg-gradient-to-br from-white to-orange-50/30 rounded-2xl p-5 shadow-sm mb-3 border border-orange-100/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-semibold text-gray-800">孩子管理</h1>
+              <p className="text-xs text-gray-400 mt-0.5">管理家庭中的孩子信息</p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingChild(null);
+                setFormData({ name: '', age: '', avatar: '' });
+                setIsModalOpen(true);
+              }}
+              className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg text-xs font-medium active:scale-95 transition-transform shadow-sm"
+            >
+              <UserPlus size={14} />
+              <span>添加</span>
+            </button>
           </div>
-          <button
-            onClick={() => {
-              setEditingChild(null);
-              setFormData({ name: '', age: '', avatar: '' });
-              setIsModalOpen(true);
-            }}
-            className="flex items-center justify-center space-x-2 px-4 py-2 sm:px-6 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto touch-target"
-          >
-            <UserPlus size={20} />
-            <span>添加孩子</span>
-          </button>
         </div>
 
         {children.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center">
-            <div className="text-5xl sm:text-6xl mb-4">👶</div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">还没有添加孩子</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-6">点击上方按钮添加您的第一个孩子</p>
+          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+            <div className="text-4xl mb-3">👶</div>
+            <h3 className="text-base font-semibold text-gray-800 mb-1">还没有添加孩子</h3>
+            <p className="text-xs text-gray-400 mb-4">点击上方按钮添加您的第一个孩子</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {children.map((child) => (
-              <div key={child.id} className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-                <div className="flex items-center space-x-3 sm:space-x-4 mb-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl sm:text-3xl text-white font-bold">
+              <div key={child.id} className="bg-white rounded-2xl shadow-sm p-4">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl text-white font-bold">
                     {child.avatar || child.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{child.name}</h3>
-                    <p className="text-sm text-gray-500">{child.age}岁</p>
+                    <h3 className="text-sm font-semibold text-gray-800 truncate">{child.name}</h3>
+                    <p className="text-xs text-gray-400">{child.age}岁</p>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-3 sm:p-4 mb-4">
+                <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-3 mb-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm sm:text-base text-gray-600">当前积分</span>
-                    <span className="text-xl sm:text-2xl font-bold text-primary">{child.totalPoints}</span>
+                    <div className="flex items-center space-x-1.5">
+                      <Star className="text-primary w-4 h-4" />
+                      <span className="text-xs text-gray-500">当前积分</span>
+                    </div>
+                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{child.totalPoints}</span>
                   </div>
                 </div>
 
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleEdit(child)}
-                    className="flex-1 py-2 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base touch-target"
+                    className="flex-1 py-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors text-xs font-medium"
                   >
                     编辑
                   </button>
                   <button
                     onClick={() => handleDelete(child.id)}
-                    className="flex-1 py-2 sm:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base touch-target"
+                    className="flex-1 py-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors text-xs font-medium"
                   >
                     删除
                   </button>
@@ -184,11 +190,12 @@ export default function Children() {
           </div>
         )}
 
+        {/* 添加/编辑弹窗 */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-scaleIn">
-              <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-scaleIn">
+              <div className="sticky top-0 bg-white flex items-center justify-between p-4 border-b">
+                <h2 className="text-base font-semibold text-gray-800">
                   {editingChild ? '编辑孩子信息' : '添加孩子'}
                 </h2>
                 <button
@@ -199,30 +206,30 @@ export default function Children() {
                   }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">姓名</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                     placeholder="输入孩子姓名"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">年龄</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">年龄</label>
                   <input
                     type="number"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+                    className="w-full px-3 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                     placeholder="输入孩子年龄"
                     required
                     min="1"
@@ -237,7 +244,7 @@ export default function Children() {
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-4">
+                <div className="flex space-x-3 pt-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -245,13 +252,13 @@ export default function Children() {
                       setEditingChild(null);
                       navigate('/children');
                     }}
-                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium touch-target text-base"
+                    className="flex-1 py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors font-medium text-sm"
                   >
                     取消
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium touch-target text-base"
+                    className="flex-1 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl hover:shadow-sm transition-all font-medium text-sm"
                   >
                     {editingChild ? '保存' : '添加'}
                   </button>

@@ -121,7 +121,7 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slideUp sm:animate-scaleIn">
         <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b z-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">添加积分记录</h2>
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">添加积分记录</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X size={24} />
           </button>
@@ -133,9 +133,9 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
             <button
               type="button"
               onClick={() => { setType('earn'); setSelectedPreset(''); setAmount(''); setReason(''); }}
-              className={`flex-1 py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+              className={`flex-1 py-3 rounded-xl font-medium transition-all text-sm sm:text-base ${
                 type === 'earn'
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -144,9 +144,9 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
             <button
               type="button"
               onClick={() => { setType('spend'); setSelectedPreset(''); setAmount(''); setReason(''); }}
-              className={`flex-1 py-3 rounded-lg font-medium transition-colors text-sm sm:text-base ${
+              className={`flex-1 py-3 rounded-xl font-medium transition-all text-sm sm:text-base ${
                 type === 'spend'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -157,7 +157,7 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
           {/* 类别选择 */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">选择类别</label>
+              <label className="text-xs font-medium text-gray-500">选择类别</label>
               <button
                 type="button"
                 onClick={() => setShowAddCategory(!showAddCategory)}
@@ -170,19 +170,19 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
 
             {/* 添加类别表单 */}
             {showAddCategory && (
-              <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-3 animate-slideDown">
+              <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-3 animate-slideDown">
                 <input
                   type="text"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 bg-white border-0 rounded-lg focus:ring-1 focus:ring-primary text-sm"
                   placeholder="类别名称，如：按时起床"
                 />
                 <input
                   type="number"
                   value={newCategory.points}
                   onChange={(e) => setNewCategory({ ...newCategory, points: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 bg-white border-0 rounded-lg focus:ring-1 focus:ring-primary text-sm"
                   placeholder="积分数值"
                   min="1"
                 />
@@ -207,7 +207,7 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
                     type="button"
                     onClick={handleAddCategory}
                     disabled={!newCategory.name || !newCategory.points}
-                    className="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-40"
+                    className="flex-1 py-2 bg-gradient-to-r from-primary to-primary/80 text-white rounded-lg text-sm font-medium disabled:opacity-40"
                   >
                     添加
                   </button>
@@ -220,9 +220,9 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
               {filteredCategories.map((cat) => (
                 <div
                   key={cat.id}
-                  className={`relative p-3 rounded-lg border-2 transition-all active:scale-[0.97] cursor-pointer ${
+                  className={`relative p-3 rounded-xl border-2 transition-all active:scale-[0.97] cursor-pointer ${
                     selectedPreset === cat.id
-                      ? 'border-primary bg-primary/10'
+                      ? 'border-primary bg-gradient-to-br from-primary/10 to-accent/10'
                       : 'border-gray-200 hover:border-primary/50'
                   }`}
                   onClick={() => handlePresetSelect(cat)}
@@ -244,12 +244,12 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
 
           {/* 积分数量 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">积分数量</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">积分数量</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => { setAmount(e.target.value); setSelectedPreset(''); }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-1 focus:ring-primary text-base"
               placeholder="输入积分数量"
               required
               min="1"
@@ -258,12 +258,12 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
 
           {/* 原因说明 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">原因说明</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">原因说明</label>
             <input
               type="text"
               value={reason}
               onChange={(e) => { setReason(e.target.value); setSelectedPreset(''); }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-1 focus:ring-primary text-base"
               placeholder="输入原因说明"
               required
             />
@@ -274,16 +274,16 @@ export default function AddPointModal({ isOpen, onClose, childId }: AddPointModa
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium touch-target text-base"
+              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium touch-target text-base"
             >
               取消
             </button>
             <button
               type="submit"
-              className={`flex-1 py-3 text-white rounded-lg font-medium transition-colors touch-target text-base active:scale-[0.98] ${
+              className={`flex-1 py-3 text-white rounded-xl font-medium transition-all touch-target text-base active:scale-[0.98] shadow-sm ${
                 type === 'earn'
-                  ? 'bg-green-500 hover:bg-green-600'
-                  : 'bg-orange-500 hover:bg-orange-600'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-md'
+                  : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:shadow-md'
               }`}
             >
               确认{type === 'earn' ? '获得' : '消费'}

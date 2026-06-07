@@ -42,9 +42,9 @@ export const useConfirmStore = create<ConfirmState>((set) => ({
 }));
 
 const variantStyles: Record<string, string> = {
-  danger: 'bg-red-500 hover:bg-red-600',
-  warning: 'bg-orange-500 hover:bg-orange-600',
-  default: 'bg-primary hover:bg-primary/90',
+  danger: 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600',
+  warning: 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600',
+  default: 'bg-gradient-to-r from-primary to-primary/80 hover:shadow-sm',
 };
 
 export default function ConfirmDialog() {
@@ -71,7 +71,7 @@ export default function ConfirmDialog() {
               onConfirm();
               closeConfirm();
             }}
-            className={`flex-1 py-3.5 text-white font-medium text-sm transition-colors ${variantStyles[variant]}`}
+            className={`flex-1 py-3.5 text-white font-medium text-sm transition-all ${variantStyles[variant]}`}
           >
             {confirmText}
           </button>

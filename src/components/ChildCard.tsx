@@ -25,7 +25,7 @@
  */
 import { useStore } from '../store/useStore';
 import { Child } from '../types';
-import { Star, Edit2, Trash2 } from 'lucide-react';
+import { Star, Edit2, Trash2, ChevronRight } from 'lucide-react';
 
 interface ChildCardProps {
   child: Child;
@@ -40,60 +40,61 @@ export default function ChildCard({ child, onEdit, onDelete, onSelect }: ChildCa
   const spendRecords = records.filter(r => r.type === 'spend').length;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl sm:text-3xl text-white font-bold">
+    <div className="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xl text-white font-bold">
             {child.avatar || child.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{child.name}</h3>
-            <p className="text-sm text-gray-500">{child.age}岁</p>
+            <h3 className="text-sm font-semibold text-gray-800 truncate">{child.name}</h3>
+            <p className="text-xs text-gray-400">{child.age}岁</p>
           </div>
         </div>
         
-        <div className="flex space-x-1 sm:space-x-2">
+        <div className="flex space-x-0.5">
           <button
             onClick={() => onEdit(child)}
-            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-1.5 text-gray-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
           >
-            <Edit2 size={18} />
+            <Edit2 size={14} />
           </button>
           <button
             onClick={() => onDelete(child.id)}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >
-            <Trash2 size={18} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-3 sm:p-4 mb-4">
+      <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-3 mb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Star className="text-primary w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-sm sm:text-base text-gray-600">当前积分</span>
+          <div className="flex items-center space-x-1.5">
+            <Star className="text-primary w-4 h-4" />
+            <span className="text-xs text-gray-500">当前积分</span>
           </div>
-          <span className="text-2xl sm:text-3xl font-bold text-primary">{child.totalPoints}</span>
+          <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{child.totalPoints}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
-        <div className="bg-green-50 rounded-lg p-3 text-center">
-          <div className="text-xl sm:text-2xl font-bold text-green-600">{earnRecords}</div>
-          <div className="text-xs text-green-600">获得次数</div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50/50 rounded-xl p-2.5 text-center">
+          <div className="text-base font-bold text-green-600">{earnRecords}</div>
+          <div className="text-xs text-green-500">获得</div>
         </div>
-        <div className="bg-orange-50 rounded-lg p-3 text-center">
-          <div className="text-xl sm:text-2xl font-bold text-orange-600">{spendRecords}</div>
-          <div className="text-xs text-orange-600">消费次数</div>
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50/50 rounded-xl p-2.5 text-center">
+          <div className="text-base font-bold text-orange-600">{spendRecords}</div>
+          <div className="text-xs text-orange-500">消费</div>
         </div>
       </div>
 
       <button
         onClick={() => onSelect(child.id)}
-        className="w-full py-2 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm sm:text-base touch-target"
+        className="w-full py-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-colors font-medium text-xs flex items-center justify-center space-x-1"
       >
-        查看详情
+        <span>查看详情</span>
+        <ChevronRight size={14} />
       </button>
     </div>
   );

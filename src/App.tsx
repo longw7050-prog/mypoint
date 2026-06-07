@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Children from './pages/Children';
 import Records from './pages/Records';
 import RewardShop from './pages/RewardShop';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/children" element={<Children />} />
             <Route path="/records" element={<Records />} />
             <Route path="/rewards" element={<RewardShop />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         <BottomNav />

@@ -27,16 +27,16 @@ export const useToastStore = create<ToastState>((set) => ({
 }));
 
 const typeStyles: Record<Toast['type'], string> = {
-  success: 'bg-green-500',
-  error: 'bg-red-500',
-  warning: 'bg-orange-500',
-  info: 'bg-blue-500',
+  success: 'bg-gradient-to-r from-green-500 to-emerald-500',
+  error: 'bg-gradient-to-r from-red-500 to-rose-500',
+  warning: 'bg-gradient-to-r from-orange-500 to-amber-500',
+  info: 'bg-gradient-to-r from-blue-500 to-sky-500',
 };
 
 const typeIcons: Record<Toast['type'], string> = {
   success: '✓',
   error: '✕',
-  warning: '⚠',
+  warning: '',
   info: 'ℹ',
 };
 

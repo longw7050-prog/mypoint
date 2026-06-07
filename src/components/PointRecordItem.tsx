@@ -36,9 +36,9 @@ export default function PointRecordItem({ record, child, onDelete }: PointRecord
   const date = new Date(record.date).toLocaleDateString('zh-CN');
 
   return (
-    <div className="bg-white rounded-lg shadow p-3 sm:p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 flex items-center justify-between hover:shadow-md transition-shadow">
       <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-        <div className={`p-2 sm:p-3 rounded-full flex-shrink-0 ${isEarning ? 'bg-green-100' : 'bg-orange-100'}`}>
+        <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${isEarning ? 'bg-gradient-to-br from-green-100 to-emerald-50' : 'bg-gradient-to-br from-orange-100 to-amber-50'}`}>
           {isEarning ? (
             <TrendingUp className="text-green-600 w-5 h-5 sm:w-6 sm:h-6" />
           ) : (
