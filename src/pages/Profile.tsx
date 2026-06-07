@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Users, ChevronRight, Shield, Cloud, Tags, X, Plus, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, ChevronRight, Shield, Cloud, Tags, X, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { PointCategory } from '../types';
 import AvatarPicker from '../components/AvatarPicker';

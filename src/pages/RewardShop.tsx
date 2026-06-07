@@ -15,7 +15,7 @@ const DEFAULT_REWARDS = [
 ];
 
 export default function RewardShop() {
-  const { children, rewards, addReward, deleteReward, addRecord, selectedChildId, setSelectedChild, loadData } = useStore();
+  const { children, rewards, addReward, deleteReward, addRecord, selectedChildId, setSelectedChild } = useStore();
   const openConfirm = useConfirmStore(state => state.openConfirm);
   const addToast = useToastStore(state => state.addToast);
   const [isModalOpen, setIsModalOpen] = useState(false);
